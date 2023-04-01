@@ -1,56 +1,25 @@
-import math
-
-def decypher(compressedText):
-    key = input('Key: ')
-
-    if len(key) == 0:
-        print('No key')
-        exit()
-        
-    asciiTable = [[col + row - 256 if col + row > 255 else col + row
-                   for col in range(256)] for row in range(256)]
-
-    index = 0
-    decypherText = []
-
-    for char in compressedText:
-        keyChar = ord(key[index])
-        decypherText.append(asciiTable[keyChar].index(char))
-        index = (index+1) % len(key)
-        
-    return decypherText
-        
+import math, time
 
 
 if __name__ == '__main__':
-    with open('skompresowany.txt', 'rb') as file:
-        compressedText = [i for i in file.read()]
+    startTime = time.time()
+    with open('skompresowany.txt', 'rb') as compressed:
+        data = [i for i in compressed.read()]
     
-    try: 
-        compressedText_D = decypher(compressedText)
-        
-        dataDict = compressedText_D[0]
-        
-        dictionary = [chr(compressedText_D[i]) for i in range(1, dataDict + 1)]
-        
-        list_to_decompress = [bin(compressedText[i])[2:].zfill(8) 
-                            for i in range(dataDict + 1, len(compressedText_D))]
-        
-        bin_text = ''.join(list_to_decompress)
-        
-        to_decompress = bin_text[3:len(bin_text)-(int(bin_text[:3], 2))]
-        
-        N = math.ceil(math.log2(dataDict))
-        
-        decompressed = [dictionary[int(to_decompress[i:(i+N)], 2)]
-                        for i in range(0, len(to_decompress), N)]
-        
-        # print(decompressed)
+    uniqueSymbols = data[0]
+    dataDict = [chr(data[i]) for i in range(1, uniqueSymbols + 1)]
+    
+    toDecomp_L = [bin(data[i])[2:].zfill(8) for i in range(uniqueSymbols + 1, len(data))]
+    binText = ''.join(toDecomp_L)
 
-        with open('zdekompresowany2.txt', 'w', encoding='utf-8') as file2:
-            file2.write(''.join(decompressed))
-        
+    rest = int(binText[:3], 2)
+    toDecomp = binText[3:(len(binText) - rest)]
 
+    N = math.ceil(math.log2(uniqueSymbols))
+    decompressed = [dataDict[int(toDecomp[i:(i + N)], 2)] for i in range(0, len(toDecomp), N)]
 
-    except(ValueError, IndexError):
-        print('error')
+    with open('zdekompresowany.txt', 'w', encoding='utf-8') as decomp:
+        decomp.write(''.join(decompressed))
+
+    endTime = time.time()
+    print(f'Elapsed time {endTime - startTime}')
